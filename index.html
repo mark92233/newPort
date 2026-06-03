@@ -1,0 +1,2241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Hero | Manga Concept</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --manga-black: #000000;
+            --manga-white: #ffffff;
+        }
+
+        body {
+            background-color: var(--manga-black);
+            color: var(--manga-white);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden; /* Prevent body scroll */
+        }
+
+        main {
+            scroll-snap-type: y mandatory;
+        }
+
+        .manga-font {
+            font-family: 'Bebas Neue', sans-serif;
+            letter-spacing: -0.02em;
+        }
+
+        /* The Halftone Dot Pattern from the image */
+        .halftone {
+            background-image: radial-gradient(rgba(255,255,255,0.2) 1px, transparent 1px);
+            background-size: 12px 12px;
+        }
+
+        /* Preloader Styles */
+        #preloader {
+            transition: transform 0.8s cubic-bezier(0.83, 0, 0.17, 1);
+        }
+        #preloader.hidden {
+            transform: translateY(-100%);
+        }
+        main {
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+        }
+        main.loaded {
+            opacity: 1;
+        }
+
+        .corner-bracket {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-color: rgba(255,255,255,0.3);
+            border-style: solid;
+        }
+        .corner-bracket.top-left { top: -20px; left: -20px; border-width: 4px 0 0 4px; }
+        .corner-bracket.top-right { top: -20px; right: -20px; border-width: 4px 4px 0 0; }
+        .corner-bracket.bottom-left { bottom: -20px; left: -20px; border-width: 0 0 4px 4px; }
+        .corner-bracket.bottom-right { bottom: -20px; right: -20px; border-width: 0 4px 4px 0; }
+
+        .system-check-line {
+            animation: fadeInOut 2s infinite alternate;
+        }
+        @keyframes fadeInOut {
+            from { opacity: 0.3; }
+            to { opacity: 0.8; }
+        }
+
+
+        /* White grid background */
+        .grid-background {
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+                linear-gradient(to right, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* Glassmorphism for the floating code cards */
+        .glass {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        }
+
+        /* Glassmorphism for the data terminal blocks from about.html */
+        .glass-panel {
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.1), 0 0 10px rgba(255, 255, 255, 0.15);
+            border-radius: 0.75rem; /* rounded-xl */
+        }
+
+        /* Floating Animation */
+        .float {
+            animation: floating 5s ease-in-out infinite;
+        }
+
+        .btn-outline {
+            border: 2px solid white;
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline:hover {
+            background: white;
+            color: black;
+            transform: translate(-4px, -4px);
+            box-shadow: 6px 6px 0px rgba(255,255,255,0.3);
+        }
+
+        @keyframes floating {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(1deg); }
+        }
+
+        /* Prevent body scroll when mobile menu is open */
+        body.mobile-menu-open main {
+            overflow-y: hidden;
+        }
+
+        /* Preview image on hover */
+        .has-preview {
+            position: relative;
+            display: inline-block;
+        }
+
+        .preview-image {
+            position: absolute;
+            bottom: calc(100% + 1rem); /* 1rem spacing above the button */
+            left: 50%;
+            transform: translateX(-50%) translateY(10px) scale(0.95);
+            width: 280px; /* Width of the preview */
+            height: 180px; /* Height of the preview */
+            background-size: cover;
+            background-position: center;
+            overflow: hidden; /* Clip pseudo-elements to rounded corners */
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0.5rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            z-index: 50;
+            /* New styles for content */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 0.75rem; /* p-3 */
+        }
+
+        .has-preview:hover .preview-image {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0) scale(1);
+        }
+
+        .preview-image::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 20%, transparent 75%);
+            /* Add a blur effect to the background for text readability */
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px); /* Safari support */
+            z-index: 0; /* Behind the content */
+        }
+
+        /* Add text shadow for emphasis on the preview card */
+        .preview-image .z-10 > * {
+            text-shadow: 0 1px 5px rgba(0,0,0,0.7);
+        }
+
+        /* Mobile entrance animations */
+        .mobile-entry-animate-out {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        /* Custom Scrollbar */
+        main::-webkit-scrollbar {
+            width: 6px;
+        }
+        main::-webkit-scrollbar-track {
+            background: #000000;
+        }
+        main::-webkit-scrollbar-thumb {
+            background-color: #4a4a4a;
+            border-radius: 3px;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        @keyframes rotateGradient {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                background-color: #4ade80;
+                box-shadow: 0 0 6px 2px rgba(74, 222, 128, 0.5);
+            }
+            50% {
+                background-color: #86efac; /* lighter green */
+                box-shadow: 0 0 14px 4px rgba(74, 222, 128, 0.8);
+            }
+        }
+        .status-light {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        /* Scroll snapping for main sections */
+        header, #about-section, #timeline-banner, #projects-section, #contact-section { /* This is now applied to children of the snap container */
+            scroll-snap-align: start;
+        }
+
+        /* Animation for the workstation component */
+        #os-window, #skills-card, #tech-stack-card, #experience-card {
+            transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.7s ease;
+        }
+
+        #skills-card { transition-delay: 0.15s; }
+        #tech-stack-card { transition-delay: 0.25s; }
+        #experience-card { transition-delay: 0.35s; }
+
+        .workstation-animate-out #os-window {
+            transform: scale(0.95);
+            opacity: 0;
+        }
+        .workstation-animate-out #skills-card {
+            transform: translateX(-40px);
+            opacity: 0;
+        }
+        .workstation-animate-out #tech-stack-card {
+            transform: translate(40px, -20px);
+            opacity: 0;
+        }
+        .workstation-animate-out #experience-card {
+            transform: translate(40px, 20px);
+            opacity: 0;
+        }
+
+        /* Animation for Vertical Timeline */
+        .timeline-item {
+            transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+        }
+        .timeline-banner-animate-out .timeline-item {
+            transform: translateX(30px);
+            opacity: 0;
+        }
+        .timeline-item:nth-child(2) { transition-delay: 0.15s; }
+        .timeline-item:nth-child(3) { transition-delay: 0.30s; }
+
+        .timeline-item .sub-item {
+            transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+        }
+        .timeline-banner-animate-out .timeline-item .sub-item {
+            transform: translateX(20px);
+            opacity: 0;
+        }
+        .timeline-item .sub-item:nth-child(1) { transition-delay: 0.45s; }
+        .timeline-item .sub-item:nth-child(2) { transition-delay: 0.60s; }
+        .timeline-item .sub-item:nth-child(3) { transition-delay: 0.75s; }
+
+        /* Animation for banner title */
+        #banner-title {
+            transition: transform 0.7s ease-out, opacity 0.7s ease-out;
+        }
+
+        .timeline-banner-animate-out #banner-title {
+            transform: translateY(-20px);
+            opacity: 0;
+        }
+
+        /* Animation for hero content */
+        #hero-content-container {
+            transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.7s ease;
+        }
+
+        .hero-animate-out {
+            transform: translateX(-40px);
+            opacity: 0;
+        }
+
+        /* Project Card Styles */
+        .project-card {
+        }
+        .tech-tag {
+            background-color: rgba(255,255,255,0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-family: 'Inter', sans-serif;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        /* Projects Grid Card Styles */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            width: 100%;
+        }
+
+        @media (max-width: 1024px) {
+            .projects-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .project-card {
+            display: flex;
+            flex-direction: column;
+            background-color: #1a1a1a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, opacity 0.5s ease-out;
+        }
+
+        .project-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .card-visual {
+            width: 100%;
+            height: 180px;
+            background-color: #2a2a2a;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .card-visual img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .project-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: white;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            flex: 1;
+        }
+
+        .external-arrow-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            color: white;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+            background: transparent;
+        }
+
+        .external-arrow-btn:hover {
+            border-color: rgba(255, 255, 255, 0.6);
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .project-timeline {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            color: #a0a0a0;
+            margin: 0.25rem 0 0.5rem 0;
+            font-weight: 400;
+        }
+
+        .project-description {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            color: #d0d0d0;
+            line-height: 1.4;
+            margin-bottom: 1rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .card-tech {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .tech-pill {
+            background-color: #2a2a2a;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        /* Form Input Styles */
+        .form-input {
+            background-color: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.2);
+            padding: 12px;
+            font-family: 'Inter', sans-serif;
+            border-radius: 0;
+            transition: all 0.3s ease;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: white;
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        /* Animation for Contact Section */
+        #contact-section.contact-animate-out #contact-left-panel > *,
+        #contact-section.contact-animate-out #contact-form > * {
+            opacity: 0;
+        }
+        #contact-section.contact-animate-out #contact-left-panel > * {
+            transform: translateX(-30px);
+        }
+        #contact-section.contact-animate-out #contact-form > * {
+            transform: translateX(30px);
+        }
+
+        #contact-left-panel > *, #contact-form > * {
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+        /* Staggered delays for contact section animation */
+        #contact-title { transition-delay: 0.1s; }
+        #contact-subtitle { transition-delay: 0.2s; }
+        #contact-links-container { transition-delay: 0.3s; }
+        #contact-form div:nth-child(1) { transition-delay: 0.2s; }
+        #contact-form div:nth-child(2) { transition-delay: 0.3s; }
+        #contact-form div:nth-child(3) { transition-delay: 0.4s; }
+        #contact-form div:nth-child(4) { transition-delay: 0.5s; }
+
+
+        /* Animation for Projects Section */
+        #projects-container.projects-animate-out #projects-title {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        #projects-container.projects-animate-out .projects-grid {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        /* Modal visible state */
+        #resume-modal.is-open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        /* Animation for the modal panel's entry */
+        #resume-modal.is-open .glass-panel {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Project Modal Styles */
+        #project-modal {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        #project-modal.is-open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #project-modal.is-open .glass-panel {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Modal glass panel override for split layout */
+        #project-modal .glass-panel {
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0;
+            box-shadow: none;
+            max-width: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Left side carousel styling */
+        /* Left side carousel styling */
+        #modal-project-image-carousel {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #modal-carousel-track {
+            gap: 0;
+            display: flex;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+        }
+
+        #modal-carousel-track img {
+            width: auto;
+            height: 90%;
+            object-fit: contain;
+            flex-shrink: 0;
+            min-width: 100%;
+        }
+
+        /* Features list styling */
+        #modal-project-features {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #modal-project-features li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            line-height: 1.5;
+            font-size: 0.8rem;
+        }
+
+        #modal-project-features li:last-child {
+            border-bottom: none;
+        }
+
+        #modal-project-features li strong {
+            color: #e5e7eb;
+            font-weight: 600;
+        }
+
+        /* Right panel scrolling */
+        #project-modal .glass-panel > div:nth-child(2) {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+        }
+
+        #project-modal .glass-panel > div:nth-child(2)::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #project-modal .glass-panel > div:nth-child(2)::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #project-modal .glass-panel > div:nth-child(2)::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        #project-modal .glass-panel > div:nth-child(2)::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Features list custom scrollbar */
+        #modal-project-features-container {
+            scrollbar-width: thin;
+            scrollbar-color: #4a4a4a transparent;
+        }
+
+        #modal-project-features-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #modal-project-features-container::-webkit-scrollbar-track {
+            background: #000000;
+        }
+
+        #modal-project-features-container::-webkit-scrollbar-thumb {
+            background-color: #4a4a4a;
+            border-radius: 3px;
+        }
+
+        #modal-project-features-container::-webkit-scrollbar-thumb:hover {
+            background-color: #6a6a6a;
+        }
+
+        /* Navigation responsive */
+        nav div:last-child {
+            gap: 1.5rem;
+        }
+
+        /* Mobile header adjustments */
+        @media (max-width: 768px) {
+            header {
+                padding: 0;
+            }
+
+            #hero-content-container {
+                padding: 1rem;
+                padding-top: 5rem;
+            }
+
+            header h1 {
+                font-size: 2.5rem;
+                line-height: 1;
+                margin-bottom: 1rem;
+            }
+
+            header p {
+                font-size: 0.75rem;
+                margin-bottom: 1rem;
+            }
+        }
+
+        /* Mobile about section adjustments */
+        @media (max-width: 768px) {
+            #about-section {
+                flex-direction: column;
+                padding: 2rem 1rem;
+            }
+
+            #about-left-panel {
+                width: 100%;
+                padding: 1rem;
+            }
+
+            #about-right-panel {
+                width: 100%;
+                padding: 1rem;
+                padding-top: 2rem;
+            }
+
+            #os-window {
+                width: 16rem;
+                aspect-ratio: 3/4;
+            }
+        }
+
+        /* Close button styling */
+        #close-project-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            z-index: 20;
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(4px);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #close-project-modal:hover {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Stats row styling */
+        #project-modal .border-t.border-b {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1rem 0;
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        #project-modal .border-t.border-b > div {
+            flex: 1;
+        }
+
+        #project-modal .border-t.border-b .text-xs {
+            font-size: 0.7rem;
+            letter-spacing: 0.1em;
+            color: #6b7280;
+        }
+
+        #project-modal .border-t.border-b .font-bold {
+            margin-top: 0.25rem;
+            font-size: 1rem;
+            color: white;
+        }
+
+        .card-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.1s linear;
+        }
+        /* Hide hero illustration decorators on mobile */
+        .panel-split .absolute.opacity-20,
+        .panel-split .text-\[25rem\],
+        .panel-split .border-4 {
+            display: none;
+        }
+
+        @media (min-width: 1024px) {
+            .panel-split .absolute.opacity-20,
+            .panel-split .text-\[25rem\],
+            .panel-split .border-4 {
+                display: block;
+            }
+        }
+
+        /* Chat Feature Styles - Updated */
+        #chat-window {
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+            transform: translateY(20px) scale(0.95);
+            opacity: 0;
+            /* Overriding glass-panel to be more opaque for readability */
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(16px);
+        }
+
+        #chat-window.is-open {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+        /* Custom scrollbar for chat messages */
+        #chat-messages::-webkit-scrollbar {
+            width: 5px;
+        }
+        #chat-messages::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+        }
+        #chat-messages::-webkit-scrollbar-thumb {
+            background-color: rgba(255,255,255,0.3);
+            border-radius: 3px;
+        }
+        /* Message bubble styling */
+        .chat-bubble-bot, .chat-bubble-user {
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            max-width: 85%;
+            line-height: 1.5;
+            font-size: 0.875rem;
+            word-wrap: break-word;
+        }
+        .chat-bubble-bot {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e5e7eb; /* text-gray-200 */
+            border-bottom-left-radius: 0.25rem;
+        }
+        .chat-bubble-user {
+            background-color: #ffffff;
+            color: #000000;
+            border-bottom-right-radius: 0.25rem;
+        }
+        /* Override form-input for chat */
+        #chat-input.form-input {
+            padding: 10px;
+            border-radius: 0.375rem; /* rounded-md */
+        }
+        /* Override btn-outline for chat */
+        #chat-form .btn-outline {
+            padding: 10px 16px;
+            border-radius: 0.375rem; /* rounded-md */
+        }
+
+        /* Suggestion Chips */
+        .suggestion-chip {
+            background-color: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #d1d5db; /* text-gray-300 */
+            padding: 0.375rem 0.875rem; /* py-1.5 px-3.5 */
+            border-radius: 9999px;
+            font-size: 0.75rem; /* text-xs */
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .suggestion-chip:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.25);
+            color: #fff;
+        }
+
+        /* Animated background particles */
+        .particles-container {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .particle {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float-particle 20s infinite linear;
+            bottom: -150px; /* Start from below the screen */
+        }
+        @keyframes float-particle {
+            from {
+                transform: translateY(0) translateX(0);
+                opacity: 0.5;
+            }
+            to {
+                transform: translateY(-120vh) translateX(var(--x-end, 0px));
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <div id="preloader" class="fixed inset-0 bg-black z-[9999] flex items-center justify-center">
+        <div class="absolute inset-0 grid-background opacity-50"></div>
+        <div class="relative text-center p-12">
+            <div class="corner-bracket top-left"></div>
+            <div class="corner-bracket top-right"></div>
+            <div class="corner-bracket bottom-left"></div>
+            <div class="corner-bracket bottom-right"></div>
+
+            <div class="text-7xl font-black tracking-tighter manga-font mb-12">MARK.DEV //</div>
+            <div class="w-96 h-2 bg-zinc-800 border border-zinc-700 mx-auto">
+                <div id="loading-bar" class="h-full bg-white" style="width: 0%; transition: width 0.1s linear;"></div>
+            </div>
+            <div id="loading-percentage" class="font-mono text-base mt-4">0%</div>
+            <div id="loading-status" class="font-mono text-sm text-zinc-400 mt-2 uppercase tracking-widest">Initializing System...</div>
+            
+            <div class="absolute bottom-full left-0 w-full mb-4 text-left font-mono text-xs text-green-400/50 space-y-1">
+                <div class="system-check-line" style="animation-delay: 0.2s;">[SYSTEM_CHECK] :: MEMORY_OK</div>
+                <div class="system-check-line" style="animation-delay: 0.5s;">[SYSTEM_CHECK] :: KERNEL_INTEGRITY_OK</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main scroll container to fix mouse wheel snapping issues -->
+    <main class="h-screen overflow-y-scroll scroll-smooth">
+        <header class="relative min-h-screen flex flex-col md:flex-row overflow-hidden bg-black">
+        
+        <nav class="fixed top-0 left-0 right-0 flex justify-between items-center px-6 md:px-20 py-6 md:py-8 z-50 border-b border-white/10 bg-black/80 backdrop-blur-sm">
+            <div class="text-xl font-black tracking-tighter manga-font">MARK.DEV //</div>
+            <!-- Desktop Nav -->
+            <div class="hidden md:flex space-x-6 text-xs font-bold uppercase tracking-widest">
+                <a href="#projects-section" class="hover:line-through">Projects</a>
+                <a href="#about-section" class="hover:line-through">About Me</a>
+                <a href="#timeline-banner" class="hover:line-through">Journey</a>
+                <a href="#contact-section" class="hover:line-through">Contact</a>
+            </div>
+            <!-- Mobile Nav Button -->
+            <button id="mobile-menu-btn" class="md:hidden text-2xl font-black tracking-widest hover:text-zinc-400 transition-colors">[ = ]</button>
+        </nav>
+
+        <!-- Mobile Menu Overlay -->
+        <div id="mobile-menu-overlay" class="hidden fixed inset-0 bg-black/95 backdrop-blur-lg z-[9998] flex flex-col items-center justify-center text-center transition-opacity duration-300">
+            <button id="close-mobile-menu-btn" class="absolute top-6 right-6 text-4xl font-mono text-zinc-400 hover:text-white transition-colors">&times;</button>
+            <a href="#projects-section" class="mobile-nav-link text-3xl manga-font tracking-wider py-4">Projects</a>
+            <a href="#about-section" class="mobile-nav-link text-3xl manga-font tracking-wider py-4">About Me</a>
+            <a href="#timeline-banner" class="mobile-nav-link text-3xl manga-font tracking-wider py-4">Journey</a>
+            <a href="#contact-section" class="mobile-nav-link text-3xl manga-font tracking-wider py-4">Contact</a>
+        </div>
+
+        <!-- Full background image spanning both sides -->
+        <img src="image.png" 
+             class="absolute inset-0 w-full h-full object-cover grayscale contrast-[1.2] brightness-90 opacity-60 mix-blend-luminosity pointer-events-none z-0">
+
+        <!-- Left Side: Blurred background with dark overlay for text readability -->
+        <div id="hero-content-container" class="w-full md:w-3/5 min-h-screen flex flex-col justify-center p-8 md:p-20 z-20 backdrop-blur-lg bg-black/40">
+            <h1 class="text-6xl md:text-[7rem] manga-font leading-[0.85] mb-6 pt-12">
+                MARK JOHN /<br>
+                FULL-STACK DEV //<br>
+                <span id="typewriter-text" class="text-transparent" style="-webkit-text-stroke: 1.5px white;"></span><span class="text-transparent" style="-webkit-text-stroke: 1.5px white; animation: blink 1s step-end infinite;">_</span>
+            </h1>
+            
+            <p class="text-sm md:text-base font-mono text-gray-400 mb-10 max-w-lg uppercase tracking-tighter">
+                &lt;ARCHITECTING SCALABLE SYSTEMS FOR LONG-TERM ROI&gt;<br>
+                // &lt;EXPERTISE: FULL-STACK PHP, PYTHON & REACT ECOSYSTEMS&gt;
+            </p>
+
+            <div class="flex flex-wrap gap-4">
+                <a href="#about-section" class="inline-block bg-white text-black px-8 py-3 font-black uppercase text-sm tracking-widest hover:bg-gray-200 transition">
+                    [LEARN MORE]
+                </a>
+                <button id="view-resume-btn" class="btn-outline px-8 py-3 font-black uppercase text-sm tracking-widest">
+                    [DOWNLOAD RESUME]
+                </button>
+            </div>
+
+            <div class="mt-12 flex space-x-6">
+                <a href="https://github.com/mark92233" class="opacity-50 hover:opacity-100 transition">GITHUB</a>
+                <a href="mailto:andomark922@gmail.com" class="opacity-50 hover:opacity-100 transition copy-email-link">EMAIL</a>
+            </div>
+        </div>
+
+        <!-- Right Side: Unblurred, transparent to show main background (hidden on mobile) -->
+        <div class="hidden md:flex w-full md:w-2/5 relative halftone overflow-hidden border-l-4 border-white z-10">
+
+            <div class="hidden lg:block absolute inset-0 opacity-20 pointer-events-none" 
+                 style="background: repeating-linear-gradient(45deg, transparent, transparent 40px, #fff 41px, transparent 42px);">
+            </div>
+
+            <div class="hidden lg:flex absolute inset-0 items-center justify-center grayscale contrast-150 pointer-events-none z-10">
+                <div class="text-[25rem] font-black opacity-10 manga-font rotate-12 select-none">CODE</div>
+            </div>
+
+            <div class="hidden lg:block glass float absolute top-1/4 right-10 p-4 w-72 text-[10px] font-mono leading-tight z-30">
+                <div class="text-green-400 mb-1">// System Architect Protocol</div>
+                <span class="text-purple-400">public function</span> <span class="text-yellow-200">initialize()</span> {<br>
+                &nbsp;&nbsp;<span class="text-blue-300">$this</span>->status = <span class="text-orange-300">'ready'</span>;<br>
+                &nbsp;&nbsp;<span class="text-blue-300">$this</span>->deploy(<span class="text-white">"LabFlow"</span>);<br>
+                }
+            </div>
+
+            <div class="hidden lg:block glass float absolute bottom-1/4 left-10 p-4 w-56 text-[10px] font-mono leading-tight z-30" style="animation-delay: -2s;">
+                <span class="text-pink-400">const</span> [growth, setGrowth] = useState(<span class="text-orange-300">0</span>);<br><br>
+                useEffect(() => {<br>
+                &nbsp;&nbsp;levelUp();<br>
+                }, []);
+            </div>
+
+        </div>
+        </header>
+
+    <!-- ABOUT ME SECTION -->
+    <section id="about-section" class="relative min-h-screen flex flex-col md:flex-row overflow-hidden bg-black">
+        
+        <!-- The same background image setup -->
+        <img src="image.png" 
+             class="absolute inset-0 w-full h-full object-cover grayscale contrast-[1.2] brightness-90 opacity-60 mix-blend-luminosity pointer-events-none z-0">
+
+        <!-- Moving Blur Panel -->
+        <div id="moving-blur-panel" class="hidden md:block absolute top-0 left-0 w-full md:w-2/5 h-full backdrop-blur-lg bg-black/40 z-[15] transition-all duration-1000 ease-in-out" style="left: 0%;"></div>
+
+        <!-- Left Side: Unblurred content area -->
+        <div id="about-left-panel" class="w-full md:w-3/5 relative halftone z-10 flex items-center justify-center p-8">
+            <!-- MAIN WORKSTATION WRAPPER from about.html -->
+            <div id="workstation-container" class="relative w-full max-w-2xl flex flex-col items-center justify-center gap-8 lg:gap-0 lg:aspect-[4/3]">
+                
+                <!-- 1. CENTRAL PICTURE HOLDER (OS WINDOW FRAME) -->
+                <div id="os-window" class="group card-3d relative w-full max-w-[18rem] sm:max-w-[22rem] aspect-[3/4] bg-zinc-900 border-2 border-white shadow-[8px_8px_0px_0px_rgba(255,255,255,0.15)] z-20 overflow-hidden flex flex-col">
+                    <!-- Window Top Header Bar -->
+                    <div class="w-full h-8 bg-zinc-900 border-b-2 border-white flex items-center justify-end px-3 space-x-1.5 shrink-0">
+                        <div class="w-3 h-3 border border-white flex items-center justify-center text-[8px] text-white font-bold select-none cursor-pointer hover:bg-white hover:text-black">_</div>
+                        <div class="w-3 h-3 border border-white flex items-center justify-center text-[8px] text-white font-bold select-none cursor-pointer hover:bg-white hover:text-black">❑</div>
+                        <div class="w-3 h-3 border border-white flex items-center justify-center text-[8px] text-white font-bold select-none cursor-pointer hover:bg-white hover:text-black">X</div>
+                    </div>
+                    <!-- Frame Image Area -->
+                    <div class="w-full flex-1 relative">
+                        <!-- Default Grayscale Image -->
+                        <div class="absolute inset-0 bg-cover bg-center contrast-125 brightness-90 grayscale" style="background-image: url('ANDO\,\ MARK\ JOHN\ \ TOG_3174.jpg');"></div>
+                        <!-- Color Image on Hover -->
+                        <div class="absolute inset-0 bg-cover bg-center transition-opacity duration-500 opacity-0 group-hover:opacity-100" style="background-image: url('ANDO\,\ MARK\ JOHN\ \ TOG_3174.jpg');"></div>
+                        <!-- Scanning grid overlay inside image box -->
+                        <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px)] [background-size:100%_4px] pointer-events-none"></div>
+                    </div>
+                </div>
+
+                <!-- 2. DATA TERMINAL: SKILLS (Floating Left) -->
+                <div id="skills-card" class="glass-panel w-full max-w-md p-4 text-left z-30 shadow-lg lg:absolute lg:-left-24 lg:top-[15%] lg:w-60 xl:w-72 lg:max-w-none">
+                    <h4 class="text-white font-bold text-xs sm:text-sm tracking-wider uppercase mb-2 border-b border-zinc-700 pb-1">SKILLS</h4>
+                    <ul class="text-[10px] sm:text-xs text-zinc-300 space-y-1.5 leading-relaxed">
+                        <li>- OBJECT-ORIENTED PROGRAMMING (OOP)</li>
+                        <li>- MVC ARCHITECTURE</li>
+                        <li>- AGILE METHODOLOGY</li>
+                        <li>- ROLE-BASED ACCESS CONTROL (RBAC)</li>
+                        <li>- FORENSIC LOGGING</li>
+                    </ul>
+                </div>
+
+                <!-- 3. DATA TERMINAL: TECH STACK (Floating Top Right) -->
+                <div id="tech-stack-card" class="glass-panel w-full max-w-md p-4 text-left z-30 shadow-lg lg:absolute lg:-right-28 lg:top-[5%] lg:w-64 xl:w-80 lg:max-w-none">
+                    <h4 class="text-white font-bold text-xs sm:text-sm tracking-wider uppercase mb-2 border-b border-zinc-700 pb-1">TECH STACK</h4>
+                    <ul class="text-[10px] sm:text-xs text-zinc-300 space-y-1.5 leading-relaxed">
+                        <li>- PHP (LARAVEL)</li>
+                        <li>- JAVASCRIPT (REACT)</li>
+                        <li>- PYTHON (DJANGO)</li>
+                        <li>- MYSQL DATABASES</li>
+                        <li>- MOBILE DEVELOPMENT (KOTLIN)</li>
+                    </ul>
+                </div>
+
+                <!-- 4. DATA TERMINAL: EXPERIENCE / PASSION (Floating Bottom Right) -->
+                <div id="experience-card" class="glass-panel w-full max-w-md p-4 text-left z-30 shadow-lg lg:absolute lg:-right-28 lg:bottom-[5%] lg:w-64 xl:w-80 lg:max-w-none">
+                    <h4 class="text-white font-bold text-xs sm:text-sm tracking-wider uppercase mb-2 border-b border-zinc-700 pb-1">EXPERIENCE / PASSION</h4>
+                    <ul class="text-[10px] sm:text-xs text-zinc-300 space-y-1.5 leading-relaxed">
+                        <li>- FREELANCE DEVELOPMENT</li>
+                        <li>- INTERACTIVE UI/UX</li>
+                        <li>- FULL-STACK MEDICAL SYSTEMS</li>
+                        <li>- DATA INTEGRITY & RBAC</li>
+                        <li>- SCHOOL UTILITY SYSTEMS</li>
+                        <li>- MARKETING ANALYSIS & PREDICTION MODELS</li>
+                        <li>- MOBILE APPLICATION DEVELOPMENT</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Right Side: Content area -->
+        <div id="about-right-panel" class="w-full md:w-2/5 flex flex-col pt-16 md:pt-32 p-8 md:p-20 z-20 border-t-4 md:border-t-0 md:border-l-4 border-white backdrop-blur-lg bg-black/40 md:backdrop-blur-none md:bg-transparent">
+            <div id="about-text-content" class="transition-transform duration-1000 ease-in-out flex flex-col h-full">
+                <div>
+                    <h2 class="text-6xl md:text-[5rem] manga-font leading-[0.85] mb-10 text-left">
+                        SYSTEM<br>
+                        ARCHITECT
+                    </h2>
+                    <p class="font-mono text-zinc-300 text-sm md:text-base leading-relaxed">
+                        "I see code as a business asset. My focus is on architecting systems that are not only efficient and secure today, but are built to scale, adapt, and deliver a compounding return on investment for years to come."
+                    </p>
+                </div>
+
+                <div class="flex-grow"></div>
+
+                <div class="flex justify-end mt-8">
+                    <div class="has-preview">
+                        <a href="https://markjohnando.netlify.app/" target="_blank" rel="noopener noreferrer" class="btn-outline px-8 py-3 font-black uppercase text-sm tracking-widest">
+                            [KNOW MORE PERSONALLY]
+                        </a>
+                        <div class="preview-image" style="background-image: url('institute/perso.png');">
+                            <div class="relative z-10 text-white">
+                                <h5 class="font-black text-base tracking-wide uppercase">My Personal Website</h5>
+                                <p class="text-xs text-zinc-300 truncate font-mono">https://markjohnando.netlify.app/</p>
+                                <div class="mt-3 pt-2 border-t border-white/10 text-xs text-zinc-400 font-mono">
+                                    Last Updated: January 2026
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- INSTITUTIONAL BACKGROUND SECTION -->
+    <section id="timeline-banner" class="relative min-h-screen flex flex-col items-center justify-start bg-black px-4 md:px-8 pt-24 md:pt-32 overflow-hidden border-t border-b border-white/10 grid-background">
+        <div class="particles-container"></div>
+        <div id="banner-timeline-container" class="relative z-10 w-full max-w-6xl mx-auto timeline-banner-animate-out">
+            <h2 id="banner-title" class="text-center text-4xl md:text-5xl manga-font tracking-wider uppercase mb-16 md:mb-24">
+                Institutional Background
+            </h2>
+        <!-- NEW VERTICAL TIMELINE -->
+        <div class="relative w-full max-w-3xl mx-auto">
+            <!-- The vertical line -->
+            <div class="absolute left-4 md:left-16 top-0 h-full w-px bg-zinc-700"></div>
+
+            <!-- Timeline Item 1: High School -->
+            <div class="timeline-item relative pl-8 sm:pl-12 md:pl-32 pb-16">
+                <div class="absolute left-4 md:left-16 top-1 -translate-x-1/2 w-5 h-5 bg-white rounded-full border-[3px] border-black z-10"></div>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                    <div class="group relative w-32 h-32 flex-shrink-0">
+                        <img src="institute/snhs.jpg" alt="SNHS Logo" class="absolute inset-0 w-full h-full rounded-full object-cover bg-zinc-800 border-2 border-zinc-600 transition-opacity duration-300 opacity-100 group-hover:opacity-0">
+                        <img src="institute/snhs1.jpg" alt="SNHS Campus" class="absolute inset-0 w-full h-full rounded-full object-cover bg-zinc-800 border-2 border-zinc-600 transition-opacity duration-300 opacity-0 group-hover:opacity-100">
+                    </div>
+                    <div>
+                        <h5 class="font-bold text-lg uppercase tracking-wider">High School</h5>
+                        <p class="text-sm text-zinc-400">STEM Batch 2024</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline Item 2: Associate -->
+            <div class="timeline-item relative pl-8 sm:pl-12 md:pl-32 pb-16">
+                <div class="absolute left-4 md:left-16 top-1 -translate-x-1/2 w-5 h-5 bg-white rounded-full border-[3px] border-black z-10"></div>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                    <div class="group relative w-32 h-32 flex-shrink-0">
+                        <img src="institute/wmsu seal.jpg" alt="WMSU Seal" class="absolute inset-0 w-full h-full rounded-full object-cover bg-zinc-800 border-2 border-zinc-600 transition-opacity duration-300 opacity-100 group-hover:opacity-0">
+                        <img src="ANDO, MARK JOHN  TOG_3174.jpg" alt="Mark John Ando" class="absolute inset-0 w-full h-full rounded-full object-cover bg-zinc-800 border-2 border-zinc-600 transition-opacity duration-300 opacity-0 group-hover:opacity-100">
+                    </div>
+                    <div>
+                        <h5 class="font-bold text-lg uppercase tracking-wider">Associate</h5>
+                        <p class="text-sm text-zinc-400">Major in Application Development - 2026</p>
+                    </div>
+                </div>
+                <!-- Sub-items for Associate -->
+                <div class="relative pl-4 md:pl-8 mt-12 border-l-2 border-zinc-700/50 space-y-10">
+                    <!-- Sub Item 1 -->
+                    <div class="sub-item relative pl-6 md:pl-10">
+                        <div class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-zinc-400 rounded-full border-[2px] border-black"></div>
+                        <div class="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+                            <div class="group relative w-20 h-20 flex-shrink-0">
+                                <img src="institute/phicss.png" alt="PhiCSS Logo" class="absolute inset-0 w-full h-full rounded-full object-cover bg-zinc-800 border-2 border-zinc-700 transition-opacity duration-300 opacity-100 group-hover:opacity-0">
+                                <img src="institute/phicss1.jpg" alt="PhiCSS Event" class="absolute inset-0 w-full h-full rounded-full object-cover bg-zinc-800 border-2 border-zinc-700 transition-opacity duration-300 opacity-0 group-hover:opacity-100">
+                            </div>
+                            <div>
+                                <h6 class="font-bold text-base uppercase">Philippine Computing Studies Society</h6>
+                                <p class="text-xs text-zinc-500">Vice President</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Sub Item 2 -->
+                    <div class="sub-item relative pl-6 md:pl-10">
+                        <div class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-zinc-400 rounded-full border-[2px] border-black"></div>
+                        <div class="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+                            <div class="group relative w-20 h-20 flex-shrink-0">
+                                <img src="institute/csc.png" alt="CSC Logo" class="absolute inset-0 w-full h-full rounded-full object-cover bg-zinc-800 border-2 border-zinc-700 transition-opacity duration-300 opacity-100 group-hover:opacity-0">
+                                <img src="institute/csc1.jpg" alt="CSC Event" class="absolute inset-0 w-full h-full rounded-full object-cover bg-zinc-800 border-2 border-zinc-700 transition-opacity duration-300 opacity-0 group-hover:opacity-100">
+                            </div>
+                            <div>
+                                <h6 class="font-bold text-base uppercase">College Student Council</h6>
+                                <p class="text-xs text-zinc-500">Logistics Member</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Sub Item 3 -->
+                    <div class="sub-item relative pl-6 md:pl-10">
+                        <div class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-zinc-400 rounded-full border-[2px] border-black"></div>
+                        <div class="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+                            <div class="group relative w-20 h-20 flex-shrink-0">
+                                <img src="institute/gdg.png" alt="GDG Logo" class="absolute inset-0 w-full h-full rounded-full object-cover bg-zinc-800 border-2 border-zinc-700 transition-opacity duration-300 opacity-100 group-hover:opacity-0">
+                                <img src="institute/gdg1.jpg" alt="GDG Event" class="absolute inset-0 w-full h-full rounded-full object-cover bg-zinc-800 border-2 border-zinc-700 transition-opacity duration-300 opacity-0 group-hover:opacity-100">
+                            </div>
+                            <div>
+                                <h6 class="font-bold text-base uppercase">Google Developer Group</h6>
+                                <p class="text-xs text-zinc-500">Active Member</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline Item 3: Bachelors -->
+            <div class="timeline-item relative pl-8 sm:pl-12 md:pl-32 pb-16">
+                <div class="absolute left-4 md:left-16 top-1 -translate-x-1/2 w-5 h-5 bg-white rounded-full border-[3px] border-black z-10"></div>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                    <div class="group relative w-32 h-32 flex-shrink-0">
+                        <img src="institute/ques.png" alt="Question Mark" class="absolute inset-0 w-full h-full rounded-full object-cover bg-zinc-800 border-2 border-zinc-600 transition-opacity duration-300 opacity-100 group-hover:opacity-0">
+                        <img src="institute/cebu.png" alt="Cebu City" class="absolute inset-0 w-full h-full rounded-full object-cover bg-zinc-800 border-2 border-zinc-600 transition-opacity duration-300 opacity-0 group-hover:opacity-100">
+                    </div>
+                    <div>
+                        <h5 class="font-bold text-lg uppercase tracking-wider">Bachelors</h5>
+                        <p class="text-sm text-zinc-400">Cebu - Undetermined</p>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+        </section>
+
+    <section id="projects-section" class="relative min-h-screen flex flex-col bg-black px-8 pt-32 pb-8 md:px-12 md:pt-32 md:pb-12 overflow-hidden border-t border-b border-white/10">
+        <!-- The same background image setup -->
+        <img src="image.png" 
+             class="absolute inset-0 w-full h-full object-cover grayscale contrast-[1.2] brightness-90 opacity-60 mix-blend-luminosity pointer-events-none z-0">
+
+        <!-- Blur overlay -->
+        <div class="absolute inset-0 w-full h-full backdrop-blur-lg bg-black/30 z-0"></div>
+
+        <div id="projects-container" class="w-full max-w-7xl mx-auto relative z-10 projects-animate-out flex flex-col">
+            <h2 id="projects-title" class="text-center text-4xl md:text-5xl manga-font tracking-wider uppercase mb-16 transition-all duration-500" style="transition-delay: 0.1s;">
+                Selected Works
+            </h2>
+            
+            <div id="projects-grid-container" class="w-full">
+                <!-- JS will populate this with cards -->
+            </div>
+        </div>
+
+        <!-- Project Detail Modal -->
+        <div id="project-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[10000] flex items-center justify-center p-0 md:p-4 transition-opacity duration-300 opacity-0 pointer-events-none overflow-hidden">
+            <div class="glass-panel w-full max-w-6xl h-[80vh] md:h-[90vh] flex flex-col transform transition-all duration-300 ease-out opacity-0 p-0 overflow-hidden">
+                <!-- This container handles the layout shift from mobile (flex) to desktop (grid) -->
+                <div class="w-full h-full flex flex-col md:grid md:grid-cols-2">
+
+                    <!-- UPPER/LEFT PART -->
+                    <div class="hidden md:flex relative flex-col overflow-hidden bg-gradient-to-br from-zinc-900 to-black">
+                        <!-- Carousel -->
+                        <div id="modal-project-image-carousel" class="h-[40vh] md:h-1/2 w-full bg-zinc-800 overflow-hidden relative flex items-center justify-center md:border-b border-zinc-700">
+                            <div id="modal-carousel-track" class="flex h-full items-center w-full"></div>
+                        </div>
+
+                        <!-- Tags (Mobile Only) -->
+                        <div id="modal-project-tags" class="p-4 border-b border-zinc-800 md:hidden"></div>
+
+                        <!-- Features (Desktop Only) -->
+                        <!-- Description (Desktop Only) -->
+                        <div class="hidden md:flex h-1/2 w-full overflow-y-auto p-6 flex-col">
+                            <h4 class="text-xs uppercase tracking-widest text-zinc-400 font-mono mb-4 flex-shrink-0">Description</h4>
+                            <p id="modal-project-description" class="text-sm text-zinc-300 leading-relaxed"></p>
+                        </div>
+                    </div>
+
+                    <!-- LOWER/RIGHT PART -->
+                    <div class="relative flex-1 overflow-y-auto">
+                        <!-- Unified Close Button -->
+                        <button class="close-project-modal-btn absolute top-4 right-4 text-3xl font-bold text-white hover:text-red-500 transition-colors z-50 bg-black/20 hover:bg-black/40 w-10 h-10 flex items-center justify-center rounded-full">&times;</button>
+                        <!-- Tags (Desktop Only) -->
+                        <div id="modal-project-tags-desktop" class="hidden md:flex flex-wrap gap-2 p-8 pt-12 pb-0"></div>
+
+                        <!-- Mobile 2-col grid / Desktop single col -->
+                        <div class="grid grid-cols-1 gap-6 p-4 md:p-8 md:pt-6">
+                            <!-- Features (Mobile Only) -->
+                            <div class="hidden">
+                                <h4 class="text-xs uppercase tracking-widest text-zinc-400 font-mono mb-4">Key Features</h4>
+                                <ul id="modal-project-features" class="space-y-3 text-sm text-zinc-300"></ul>
+                            </div>
+
+                            <!-- Main Info -->
+                            <div>
+                                <h3 id="modal-project-title" class="manga-font text-2xl md:text-4xl tracking-wider mb-6 leading-tight"></h3>
+                                <div class="flex flex-col md:flex-row items-start md:items-center gap-6 mb-8 py-4 border-t border-b border-zinc-700">
+                                    <div class="flex-1">
+                                        <p class="text-xs uppercase tracking-widest text-zinc-500 font-mono mb-1">Role</p>
+                                        <p id="modal-project-role" class="font-bold text-white"></p>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-xs uppercase tracking-widest text-zinc-500 font-mono mb-1">Year</p>
+                                        <p id="modal-project-year" class="font-bold text-white"></p>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-xs uppercase tracking-widest text-zinc-500 font-mono mb-1">Duration</p>
+                                        <p id="modal-project-duration" class="font-bold text-white"></p>
+                                    </div>
+                                </div>
+                                <!-- Features (Desktop Only) -->
+                                <div class="mt-8">
+                                    <h4 class="text-xs uppercase tracking-widest text-zinc-400 font-mono mb-4 flex-shrink-0">Key Features</h4>
+                                    <ul id="modal-project-features-desktop" class="space-y-3 text-sm text-zinc-300"></ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT SECTION -->
+    <section id="contact-section" class="contact-animate-out relative min-h-screen flex flex-col bg-black border-t border-white/10 p-8 md:p-12 grid-background">
+        <div class="particles-container"></div>
+
+        <div class="relative z-10 flex-grow flex flex-col md:flex-row items-center">
+            <!-- Left Panel -->
+            <div id="contact-left-panel" class="w-full md:w-1/2 flex flex-col justify-center p-8 md:p-20">
+                <h2 id="contact-title" class="text-6xl md:text-[7rem] manga-font leading-[0.85] mb-6">
+                    OPEN<br>
+                    CHANNEL //
+                </h2>
+                <p id="contact-subtitle" class="font-mono text-zinc-400 max-w-md">
+                    Have a project in mind or just want to connect? Send a transmission. I'm always open to collaborating on new and exciting ideas.
+                </p>
+                <div id="contact-links-container" class="mt-12 flex space-x-6">
+                    <a href="https://github.com/mark92233" class="opacity-50 hover:opacity-100 transition">GITHUB</a>
+                    <a href="mailto:andomark922@gmail.com" class="opacity-50 hover:opacity-100 transition copy-email-link">EMAIL</a>
+                </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="w-full md:w-1/2 flex items-center justify-center p-8 md:p-20 border-t-4 md:border-t-0 md:border-l-4 border-white">
+                <form id="contact-form" class="w-full max-w-md space-y-6">
+                    <div>
+                        <label for="name" class="font-mono text-xs uppercase tracking-widest text-zinc-500">// NAME</label>
+                        <input type="text" id="name" name="name" class="form-input w-full mt-2">
+                    </div>
+                    <div>
+                        <label for="email" class="font-mono text-xs uppercase tracking-widest text-zinc-500">// EMAIL_ADDRESS</label>
+                        <input type="email" id="email" name="email" class="form-input w-full mt-2">
+                    </div>
+                    <div>
+                        <label for="message" class="font-mono text-xs uppercase tracking-widest text-zinc-500">// MESSAGE_PAYLOAD</label>
+                        <textarea id="message" name="message" rows="5" class="form-input w-full mt-2"></textarea>
+                    </div>
+                    <div class="pt-4">
+                        <button type="submit" class="btn-outline w-full px-8 py-3 font-black uppercase text-sm tracking-widest">
+                            [SEND TRANSMISSION]
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="relative z-10 mt-auto pt-8">
+            <div class="glass-panel max-w-7xl mx-auto p-6 md:p-8 rounded-xl">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                    <!-- Left Column: Branding -->
+                    <div class="text-center md:text-left">
+                        <h4 class="text-xl font-black tracking-tighter manga-font">MARK.DEV //</h4>
+                        <p class="text-xs text-zinc-400 font-mono mt-1">&copy; 2026. All Rights Reserved.</p>
+                    </div>
+                    <!-- Middle Column: System Status -->
+                    <div class="font-mono text-xs uppercase tracking-widest text-center">
+                        <div class="flex items-center justify-center gap-3">
+                            <div class="status-light w-2 h-2 rounded-full"></div>
+                            <span>System Status: Operational</span>
+                        </div>
+                        <div class="text-zinc-500 mt-2">Last Sync: <span id="footer-last-sync">...</span></div>
+                    </div>
+                    <!-- Right Column: Navigation/Socials -->
+                    <div class="flex justify-center md:justify-end items-center space-x-6 text-sm font-bold uppercase">
+                         <a href="https://github.com/mark92233" class="opacity-70 hover:opacity-100 transition">Github</a>
+                         <a href="mailto:andomark922@gmail.com" class="opacity-70 hover:opacity-100 transition copy-email-link">Email</a>
+                         <a href="#" id="back-to-top" class="opacity-70 hover:opacity-100 transition">[Top]</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    </main>
+
+    <!-- Chat Head Button -->
+    <button id="chat-head" class="fixed bottom-8 right-8 w-16 h-16 rounded-full bg-zinc-900/80 border border-white/10 backdrop-blur-sm shadow-lg flex items-center justify-center text-white transform transition-transform hover:scale-110 z-[999]">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+    </button>
+
+    <!-- Chat Window Modal -->
+    <div id="chat-window" class="hidden fixed bottom-28 left-4 right-4 h-[60vh] md:h-[70vh] md:max-h-[600px] md:w-96 md:left-auto md:right-8 glass-panel flex flex-col z-[1000] overflow-hidden rounded-xl border-white/20">
+        <!-- Header -->
+        <div class="p-4 flex justify-between items-center text-white flex-shrink-0 border-b border-white/10">
+            <div>
+                <h3 class="manga-font text-xl tracking-wider">AI ASSISTANT //</h3>
+                <p class="text-xs opacity-60 font-mono">STATUS: ONLINE</p>
+            </div>
+            <button id="close-chat" class="text-3xl text-zinc-400 hover:text-white transition-colors">&times;</button>
+        </div>
+        <!-- Messages -->
+        <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4 grid-background">
+            <div class="flex justify-start">
+                <div class="chat-bubble-bot">
+                    Hello! I'm Mark's AI assistant. Ask me anything about his projects, skills, or professional journey.
+                </div>
+            </div>
+        </div>
+        <!-- Suggestion Chips -->
+        <div id="chat-suggestions" class="p-3 border-t border-white/10 flex flex-wrap gap-2 justify-center">
+            <button class="suggestion-chip">What are his core skills?</button>
+            <button class="suggestion-chip">Tell me about LabFlow.</button>
+            <button class="suggestion-chip">What's his background?</button>
+        </div>
+        <!-- Input -->
+        <div class="p-4 border-t border-white/10 flex-shrink-0">
+            <form id="chat-form" class="flex items-center space-x-3">
+                <input type="text" id="chat-input" placeholder="Transmit query..." class="form-input w-full text-sm">
+                <button type="submit" class="flex-shrink-0 btn-outline px-4 py-2 text-sm font-black uppercase">
+                    SEND
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- PDF Resume Modal -->
+    <div id="resume-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[10000] flex items-center justify-center p-4 transition-opacity duration-300 opacity-0 pointer-events-none">
+        <div class="glass-panel w-full max-w-3xl h-[85vh] flex flex-col p-4 transform transition-all duration-300 ease-out -translate-y-10 opacity-0">
+            <div class="flex justify-between items-center mb-4 flex-shrink-0">
+                <h3 class="manga-font text-2xl tracking-wider">// INCOMING_TRANSMISSION</h3>
+                <button id="close-resume-modal" class="text-3xl font-bold hover:text-red-500 transition-colors">&times;</button>
+            </div>
+            <div class="flex-grow bg-zinc-800 border border-white/20 rounded-md overflow-hidden">
+                <img src="the-big-lebowski-the-dude.gif" alt="The Dude from The Big Lebowski" class="w-full h-full object-contain">
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script>
+        const texts = [
+            "PHP MVC EXPERTISE",
+            "REACT WEAVER",
+            "DJANGO MASTER",
+            "LARAVEL ARTISAN",
+            "MACHINE LEARNING ",
+        ];
+        
+        let textIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        const typewriterElement = document.getElementById('typewriter-text');
+
+        function type() {
+            const currentText = texts[textIndex];
+            
+            if (isDeleting) {
+                typewriterElement.textContent = currentText.substring(0, charIndex - 1);
+                charIndex--;
+            } else {
+                typewriterElement.textContent = currentText.substring(0, charIndex + 1);
+                charIndex++;
+            }
+
+            let typeSpeed = isDeleting ? 50 : 100;
+
+            if (!isDeleting && charIndex === currentText.length) {
+                typeSpeed = 2000; // Pause at the end before deleting
+                isDeleting = true;
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                textIndex = (textIndex + 1) % texts.length;
+                typeSpeed = 500; // Pause before typing the next string
+            }
+
+            setTimeout(type, typeSpeed);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            if(typewriterElement) setTimeout(type, 500);
+        });
+
+        // Mobile Menu Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+            const closeMobileMenuBtn = document.getElementById('close-mobile-menu-btn');
+            const mobileMenuLinks = document.querySelectorAll('.mobile-nav-link');
+
+            const openMenu = () => {
+                if (!mobileMenuOverlay) return;
+                mobileMenuOverlay.classList.remove('hidden');
+                document.body.classList.add('mobile-menu-open');
+            };
+
+            const closeMenu = () => {
+                if (!mobileMenuOverlay) return;
+                mobileMenuOverlay.classList.add('hidden');
+                document.body.classList.remove('mobile-menu-open');
+            };
+
+            if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', openMenu);
+            if (closeMobileMenuBtn) closeMobileMenuBtn.addEventListener('click', closeMenu);
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', closeMenu);
+            });
+        });
+
+        // New script for About Me section animation on scroll
+        const aboutSection = document.getElementById('about-section');
+        if (aboutSection) {
+             const movingBlurPanel = document.getElementById('moving-blur-panel');
+             const aboutTextContent = document.getElementById('about-text-content');
+             const workstationContainer = document.getElementById('workstation-container');
+             const aboutLeftPanel = document.getElementById('about-left-panel');
+             const aboutRightPanel = document.getElementById('about-right-panel');
+ 
+             if (window.innerWidth < 768) {
+                 aboutLeftPanel.classList.add('mobile-entry-animate-out');
+                 aboutRightPanel.classList.add('mobile-entry-animate-out');
+                 aboutLeftPanel.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+                 aboutRightPanel.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+                 aboutRightPanel.style.transitionDelay = '0.2s';
+             }
+ 
+             const aboutObserver = new IntersectionObserver((entries) => {
+                 entries.forEach(entry => {
+                     if (window.innerWidth >= 768) {
+                         if (entry.isIntersecting && entry.intersectionRatio > 0.7) {
+                             movingBlurPanel.style.left = '60%';
+                             aboutTextContent.classList.remove('translate-x-full');
+                             workstationContainer.classList.remove('workstation-animate-out');
+                         } else {
+                             movingBlurPanel.style.left = '0%';
+                             aboutTextContent.classList.add('translate-x-full');
+                             workstationContainer.classList.add('workstation-animate-out');
+                         }
+                     } else {
+                         if (entry.isIntersecting) {
+                             aboutLeftPanel.classList.remove('mobile-entry-animate-out');
+                             aboutRightPanel.classList.remove('mobile-entry-animate-out');
+                         } else {
+                             aboutLeftPanel.classList.add('mobile-entry-animate-out');
+                             aboutRightPanel.classList.add('mobile-entry-animate-out');
+                         }
+                     }
+                 });
+             }, {
+                 threshold: window.innerWidth >= 768 ? 0.7 : 0.2
+             });
+             aboutObserver.observe(aboutSection);
+         }
+
+        // Observer for hero section animation
+        const heroSection = document.querySelector('header');
+        if (heroSection) {
+            const heroContentContainer = document.getElementById('hero-content-container');
+            const heroObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.intersectionRatio > 0.6) {
+                        heroContentContainer.classList.remove('hero-animate-out');
+                    } else {
+                        heroContentContainer.classList.add('hero-animate-out');
+                    }
+                });
+            }, {
+                threshold: 0.6 // Animate out when less than 60% of the hero is visible
+            });
+            heroObserver.observe(heroSection);
+        }
+
+        // Observer for the new timeline banner
+        const timelineBanner = document.getElementById('timeline-banner');
+        if (timelineBanner) {
+            const timelineBannerContainer = document.getElementById('banner-timeline-container');
+            const timelineObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        timelineBannerContainer.classList.remove('timeline-banner-animate-out');
+                    } else {
+                        timelineBannerContainer.classList.add('timeline-banner-animate-out');
+                    }
+                });
+            }, {
+                threshold: 0.2
+            });
+            timelineObserver.observe(timelineBanner);
+        }
+
+        // Observer for the new Projects section
+        const projectsSection = document.getElementById('projects-section');
+        if (projectsSection) {
+            const projectsContainer = document.getElementById('projects-container');
+            const projectsObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        projectsContainer.classList.remove('projects-animate-out');
+                        document.querySelectorAll('.project-card.mobile-entry-animate-out').forEach(card => {
+                            card.classList.remove('mobile-entry-animate-out');
+                        });
+                    } else {
+                        projectsContainer.classList.add('projects-animate-out');
+                        document.querySelectorAll('.project-card').forEach(card => {
+                            card.classList.add('mobile-entry-animate-out');
+                        });
+                    }
+                });
+            }, {
+                threshold: 0.2 // Trigger when 20% is visible
+            });
+            projectsObserver.observe(projectsSection);
+        }
+
+         // Observer for the new Contact section
+        const contactSection = document.getElementById('contact-section');
+        if (contactSection) {
+            const contactObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        contactSection.classList.remove('contact-animate-out');
+                    } else {
+                        contactSection.classList.add('contact-animate-out');
+                    }
+                });
+            }, {
+                threshold: 0.2
+            });
+            contactObserver.observe(contactSection);
+        }
+
+        // Data and logic for the interactive projects section
+        const projectsData = [
+            {
+                nav: "Student Utility",
+                title: "Clask",
+                timeline: "2025 (October - December)",
+                role: "Lead Developer",
+                year: "2025",
+                duration: "3 months",
+                description: "Many busy students struggle to keep track of their personal tasks while staying connected with their shared classroom deadlines, which often leads to missed assignments and chaotic academic workflows. To solve this, Clask provides a unified, real-time digital classroom workspace that bridges the gap between individual productivity and collaborative school tracking. The application features an interactive calendar to visualize daily agendas, class-specific code enrollments for secure group spaces, an active global assignment feed with task priority filters, real-time notifications for structural updates, and localized comment streams for swift peer-to-peer collaboration.",
+                images: ["projects/clask.png"],
+                tags: ["Kotlin", "Android", "PHP", "MySQL", "Retrofit2", "Coroutines"],
+                features: [
+                    "Authentication & Profile Management: A secure onboarding pipeline with user registration, login, profile updates, and an asynchronous avatar upload subsystem.",
+                    "Virtual Classroom Management: Allows creation of virtual classrooms with unique 6-character join codes, role hierarchies (owner, officer, student), and a roster overview.",
+                    "Comprehensive Task Lifecycle Architecture: Supports creation of personal and shared class tasks with detailed parameters (due dates, priority), status tracking, in-place editing, and deletion.",
+                    "Social Collaboration Subsystem: Features localized discussion threads anchored to specific tasks, with user context (name/avatar) and full CRUD actions on comments.",
+                    "Activity Dashboard & Live Notification Engine: Provides a home screen with dynamic task counts, a chronological agenda filter, and an event-driven notification system with read/clear management."
+                ]
+            },
+            {
+                nav: "School LMS",
+                title: "LabFlow",
+                timeline: "2026 (January - April)",
+                role: "Full-Stack Developer",
+                year: "2026",
+                duration: "4 months",
+                description: "Traditional laboratory management relies on inefficient manual logbooks that cause tracking errors, unmonitored student liabilities, and slow inventory processing. LabFlow solves this by providing a centralized, secure digital platform that streamlines lab operations through a QR-code-driven ecosystem. Key features include role-based workflows for students, teachers, and technicians, automated borrowing and return tracking with QR verification, accountability logging for damaged or lost items, smart group generation with assigned logistical tracking, AI-powered apparatus suggestions from PDF manuals, and a Progressive Web App (PWA) architecture for reliable, offline-capable mobile access.",
+                images: ["projects/labflow1.png", "projects/labflow2.png", "projects/labflow3.png"],
+                tags: ["PHP", "MVC", "Tailwind CSS", "PWA", "AI/LLM"],
+                features: [
+                    "Role-Based Portals: Dedicated dashboards with distinct operational permissions for Students, Teachers, Laboratory Technicians, and System Administrators.",
+                    "Secure Multi-Step Onboarding: Gatekept registration restricted to an institutional masterlist, secured via WMSU email with 6-digit OTP verification.",
+                    "QR-Code Driven Requisition: Automated borrowing process where student requests generate unique transaction QR codes upon teacher approval.",
+                    "Contactless Handover & Return: Scanning terminals for technicians to instantly deduct inventory upon apparatus release and automatically restock items upon check-in.",
+                    "Forensic Liability Tracking: Real-time damage logging that captures item quantity, fault types, and photo evidence, locking student clearances until digital proof of payment or replacement is approved.",
+                    "Smart Group Logistics: Auto-generation of balanced student teams with randomized leader nomination, mapping individual logistical accountability for borrowed items within a group.",
+                    "AI-Powered Assistance: Natural language inventory search and intelligent parsing of PDF laboratory manuals to automatically suggest required apparatus.",
+                    "Visual Stock Room: A drag-and-drop 2D layout builder allowing administrators to visually map and configure physical storage shelves.",
+                    "Offline-Capable PWA: Progressive Web App architecture utilizing Service Workers for rapid local caching and stable performance in thick-walled lab environments."
+                ]
+            },
+            {
+                nav: "Student Utility",
+                title: "Cebu Dorm Finder",
+                timeline: "2026 (April - Ongoing)",
+                role: "Full-Stack Developer",
+                year: "2026",
+                duration: "Ongoing",
+                description: "Traditional student housing searches rely on fragmented public web listings riddled with chaotic, unstructured data, hidden safety hazards, and unverified information. DormFinder solves this by acting as an intelligent, location-aware matching engine that aggregates, filters, and standardizes local housing markets into a unified, responsive dashboard. Key features include an automated background web harvester that strips personal contact details, a verification engine powered by the Gemini API that converts slang into structured metrics while cross-referencing regional flood hazard data (like Project NOAH) for safety scoring, a MariaDB local caching matrix with a dynamic neighborhood-profiling fallback system, and an account-gated Leaflet.js dashboard that maps safe paths and handles sphere-distance queries based on student budgets and non-negotiable amenities.",
+                images: ["projects/dorm1.png", "projects/dorm2.png", "projects/dorm3.png"],
+                tags: ["Node.js", "Python", "Gemini API", "MariaDB", "Leaflet.js"],
+                features: [
+                    "24/7 Automated Data Harvester: Background web worker scripts using hidden, stealth-configured browsers to scrape unstructured public housing groups.",
+                    "Data Privacy Compliance: Automated text isolation that instantly strips out personal contact numbers to keep the local database compliant with privacy laws.",
+                    "Gemini AI Parsing Pipeline: Direct text-streaming engine that extracts chaotic social media slang and formats it into strict numerical database parameters.",
+                    "Environmental Safety Scoring: Cross-references geographic coordinates with Project NOAH drainage maps to generate a live 0–100 property reliability and safety score.",
+                    "Intelligent Local Cache Vault: Highly responsive MariaDB matrix that saves unique property footprints to eliminate duplicate listings and minimize heavy API calls.",
+                    "Dynamic Hub On-The-Fly Fallback: Secondary scraping trigger that builds localized profiles for unmapped geographic neighborhoods dynamically when requested by a user.",
+                    "Interactive Spatial Mapping: Dual-panel interface featuring a filtering sidebar on the left and a Leaflet.js interactive map engine on the right.",
+                    "Proximity Queries: Employs ST_Distance_Sphere database logic to isolate rentals based on exact physical distance from a target university campus.",
+                    "Safe Path Visual Output: Visual mapping display that dynamically paints flood-prone streets red while highlighting verified, safe student dorm spaces in emerald green."
+                ]
+            },
+            {
+                nav: "Marketing Predictions",
+                title: "MJ Ecosystem",
+                timeline: "2026 (February - May)",
+                role: "Full-Stack Developer",
+                year: "2026",
+                duration: "3 months",
+                description: "Traditional coffee shop operations suffer from inventory waste and inaccurate financial forecasting due to manual tracking and unintegrated sales data. MJ Ecosystem solves this by providing a sophisticated, Django-based \"Self-Learning Coffee Shop\" application that follows the MVT architecture to leverage machine learning for predictive sales and stock optimization. Key features include a role-based authentication portal styled with Tailwind CSS, an advanced prediction dashboard utilizing joblib-loaded .pkl models to execute a chained forecasting logic where predicted cup demand feeds directly into revenue and inventory models, session-based forecast previews that prevent premature database writes, automated feature engineering for temporal data, a dynamic multi-branch status dashboard with percentage trend insights, and an atomic database transaction layer using select_related to maintain strict inventory integrity while preventing duplicate stock records across physical locations.",
+                images: ["projects/coffee1.png", "projects/coffee2.png", "projects/cofee3.png"],
+                tags: ["Django", "Python", "Machine Learning", "MySQL", "Tailwind CSS"],
+                features: [
+                    "Django MVT Architecture: Three-tiered modular application splitting code layers into isolated apps for store staff control, product stock tracking, and ML execution.",
+                    "Modern Tailored Portal: High-contrast storefront and landing interface built with Tailwind CSS, integrating secure database modal authentication.",
+                    "Chained Machine Learning Pipeline: Sequential inference execution where the output of a demand model directly serves as an input parameter for revenue and inventory models.",
+                    "Multi-Model Forecasting Suite: Embedded joblib configurations processing independent models for total cup demand, overall revenue, and 9 distinct product inventory categories.",
+                    "Session-Based Forecast Previews: Managerial data sandbox utilizing Django sessions to preview sales forecasts without committing temporary records to the main database.",
+                    "Automated Temporal Feature Engineering: Backend date parsing that automatically derives time variables like day of the week, month, and weekend status from target dates.",
+                    "Multi-Branch Delta Dashboard: Analytics terminal tracking multi-shift performance metrics with automated percentage calculations for day-to-day trend tracking.",
+                    "Atomic Inventory Transactions: Complete database protection utilizing transaction.atomic boundaries to enforce data integrity during multi-branch inventory updates.",
+                    "Optimized Query Fetching: Efficient relational database lookups using select_related to minimize server overhead when pulling complex branch inventory states."
+                ]
+            },
+            {
+                nav: "HR Management",
+                title: "WMSU Faculty Leave Application",
+                timeline: "2025 (September - December)",
+                role: "Full-Stack Developer",
+                year: "2025",
+                duration: "3 months",
+                description: "Traditional institutional leave tracking relies on inefficient, paper-heavy approval processes that lead to manual errors, delayed notifications, and fragmented record-keeping. WMSU Leave solves this by providing a comprehensive, PHP-based digital Leave Management System with role-based employee and administrator portals that fully automate the tracking, application, and approval cycle. Key features include an administrative pre-registration and CSV import workflow followed by a secure two-step employee registration, automatic leave-duration calculation excluding weekends, document attachments for medical leaves, an administrative approval dashboard that triggers real-time PHPMailer email notifications and official TCPDF-generated decision PDFs, a backend LeaveCreditManager that automatically deducts approved days from employee balances, and a built-in PasswordResetManager using secure email OTPs.",
+                images: ["projects/leave1.png", "projects/leave2.png", "projects/leave3.png"],
+                tags: ["PHP", "OOP", "PHPMailer", "TCPDF", "SQL"],
+                features: [
+                    "Administrative Gatekeeping: Pre-registration security workflow allowing admins to manually register official credentials or bulk-import employee data using CSV files.",
+                    "Two-Step Account Activation: Two-tier onboarding separating personal detail population from credential setup to secure role-based dashboard access.",
+                    "Smart Leave Scheduling: Intelligent request submission that automatically calculates precise application end dates by excluding calendar weekends.",
+                    "Document Attachment Interface: Secure digital payload handling for uploading medical certificates and auxiliary verification files during sick leave applications.",
+                    "Centralized Approvals Dashboard: Administrative monitoring terminal displaying total employee counts, pending leaves, active logs, and approval switches.",
+                    "Automated Transactional Emails: Real-time system notifications sent directly to users via PHPMailer SMTP configurations upon application updates.",
+                    "Dynamic PDF Form Generation: Automated server-side compilation of formal application records and decision summaries using the TCPDF library.",
+                    "Leave Credit Manager: Backend ledger system that systematically calculates, tracks, and deducts approved days from an employee's personal balance.",
+                    "OTP Password Recovery: Secure account recovery system utilizing automated email verification codes via a specialized class manager."
+                ]
+            },
+            {
+                nav: "Legacy Adopting",
+                title: "ZCMC Cancer Registry",
+                timeline: "2026 (February - May)",
+                role: "Full-Stack Developer (Internship)",
+                year: "2026",
+                duration: "3 months",
+                description: "The ZCMC Cancer Registry is an existing, specialized medical web application designed for systematic cancer data surveillance, which I was tasked with enhancing during my internship to optimize clinical workflows for healthcare professionals and researchers. The system addresses the critical problem of fragmented, manual cancer data collection that compromises tracking accuracy and delay public health reporting. The upgraded solution delivers a highly responsive, secure dashboard ecosystem that streamlines the entire data lifecycle from intake to visual analysis. Key features include an interactive dashboard utilizing Recharts for real-time epidemiological metrics, multi-step stepper forms with specialized rich inputs (such as custom datepickers and tags-inputs) to enforce data quality during tumor registration, an advanced keyboard-accessible command palette ($Ctrl+K$) paired with a collapsible sidebar for rapid navigation, and modern UX enhancements like skeleton loading states, sonner-powered toast notifications, and side-sliding sheets that handle intensive data operations without full page reloads.",
+                images: ["projects/intern1.png", "projects/intern2.png", "projects/intern3.png"],
+                tags: ["Laravel", "Next.js", "React", "TypeScript", "shadcn/ui", "Recharts"],
+                features: [
+                    "Interactive Clinical Analytics: Real-time epidemiological tracking using Recharts data rendering to chart cancer incidence over time and demographic breakdowns.",
+                    "Multi-Step Intakes (Steppers): Structured logical forms that break complex clinical data entry down into sequential, digestible checkpoints to mitigate human error.",
+                    "Specialized Medical Inputs: Custom inputs including dedicated datepickers for accurate milestones and tag inputs for collecting multiple co-morbidities or genetic markers.",
+                    "Unified Case Files Data Tables: Highly readable, responsive grid components organizing comprehensive patient archives into scannable views.",
+                    "Adaptive Collapsible Sidebar: Fluid navigation panel that seamlessly scales down into a mobile drawer to ensure full usability on mobile, tablet, and desktop devices.",
+                    "Keyboard-Driven Command Palette: High-efficiency internal search modal (Ctrl+K) allowing clinical registrars to search patient records and trigger system actions instantly.",
+                    "Hierarchical Breadcrumb Trails: Persistent location indicators built to give healthcare users clear positional reference inside deep, complex data layers.",
+                    "Non-Reload Sheets and Dialogs: Floating context blocks and side-sliding panels that let operators review detailed files or make quick modifications without breaking page states.",
+                    "Sonner Toast Feedbacks: Immediate, lightweight banner pop-ups confirming core database operations like successful case saves and records updates.",
+                    "Skeleton Performance Placeholders: UI load-state indicators that display mock component layouts during asynchronous server calls to maximize user retention."
+                ]
+            }
+        ];
+
+        let carouselIntervals = {}; // Store carousel intervals by project index
+
+        function truncateDescription(text, maxLength = 100) {
+            if (text.length <= maxLength) return text;
+            return text.substring(0, maxLength).trim() + '...';
+        }
+
+        function renderProjectCards() {
+            const gridContainer = document.getElementById('projects-grid-container');
+            if (!gridContainer) return;
+
+            const html = projectsData.map((project, index) => `
+                <div class="project-card mobile-entry-animate-out" data-project-index="${index}" style="transition-delay: ${index * 100}ms">
+                    <div class="card-visual">
+                        <img src="${project.images[0]}" alt="${project.title}">
+                    </div>
+                    <div class="card-content">
+                        <div class="card-header">
+                            <h3 class="project-title">${project.title}</h3>
+                            <button class="external-arrow-btn" data-project-index="${index}" title="View project details">↗</button>
+                        </div>
+                        <p class="project-timeline">${project.timeline}</p>
+                        <p class="project-description">${truncateDescription(project.description)}</p>
+                    </div>
+                    <div class="card-tech">
+                        ${project.tags.map(tag => `<span class="tech-pill">${tag}</span>`).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            gridContainer.innerHTML = `<div class="projects-grid">${html}</div>`;
+
+            // Attach click handlers
+            document.querySelectorAll('.project-card').forEach(card => {
+                card.addEventListener('click', () => openProjectModal(parseInt(card.dataset.projectIndex)));
+            });
+
+            document.querySelectorAll('.external-arrow-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openProjectModal(parseInt(btn.dataset.projectIndex));
+                });
+            });
+        }
+
+        function openProjectModal(index) {
+            const project = projectsData[index];
+            const modal = document.getElementById('project-modal');
+            const modalTitle = document.getElementById('modal-project-title');
+            const modalRole = document.getElementById('modal-project-role');
+            const modalYear = document.getElementById('modal-project-year');
+            const modalDuration = document.getElementById('modal-project-duration');
+            const modalDescription = document.getElementById('modal-project-description');
+            const modalTags = document.getElementById('modal-project-tags');
+            const modalTagsDesktop = document.getElementById('modal-project-tags-desktop');
+            const modalFeatures = document.getElementById('modal-project-features');
+            const modalFeaturesDesktop = document.getElementById('modal-project-features-desktop');
+            const modalCarouselTrack = document.getElementById('modal-carousel-track');
+            const mainScrollContainer = document.querySelector('main');
+
+            // Populate modal
+            modalTitle.textContent = project.title;
+            modalRole.textContent = project.role;
+            modalYear.textContent = project.year;
+            modalDuration.textContent = project.duration;
+            modalDescription.textContent = project.description;
+            
+            // Populate tags for both mobile and desktop containers
+            const tagsHtml = project.tags.map(tag => `<span class="tech-pill">${tag}</span>`).join('');
+            modalTags.innerHTML = tagsHtml;
+            modalTagsDesktop.innerHTML = tagsHtml;
+            
+            // Populate features for both mobile and desktop containers
+            const featuresHtml = project.features.map(feature => {
+                // Split feature by colon to bold the feature name
+                const parts = feature.split(':');
+                if (parts.length > 1) {
+                    return `<li><strong>${parts[0]}:</strong> ${parts.slice(1).join(':').trim()}</li>`;
+                }
+                return `<li>${feature}</li>`;
+            }).join('');
+            modalFeatures.innerHTML = featuresHtml;
+            modalFeaturesDesktop.innerHTML = featuresHtml;
+
+            // Setup carousel
+            setupCarousel(modalCarouselTrack, project.images, 'modal-' + index);
+
+            // Show modal
+            modal.classList.add('is-open');
+            setTimeout(() => {
+                modal.querySelector('.glass-panel').classList.add('is-open');
+            }, 10);
+            mainScrollContainer.style.overflowY = 'hidden';
+        }
+
+        function setupCarousel(carouselTrack, images, carouselId) {
+            // Clear any existing interval for this carousel
+            if (carouselIntervals[carouselId]) {
+                clearInterval(carouselIntervals[carouselId]);
+            }
+            // Reset styles
+            carouselTrack.style.transition = 'none';
+            carouselTrack.style.transform = 'translateX(0%)';
+
+            if (!images || images.length === 0) {
+                carouselTrack.innerHTML = '';
+                return;
+            }
+
+            if (images.length === 1) {
+                carouselTrack.innerHTML = `<img src="${images[0]}" class="h-[90%] w-auto object-contain flex-shrink-0 bg-zinc-700 min-w-full">`;
+                return;
+            }
+
+            // Logic for multiple images with sliding animation
+            const numImages = images.length;
+            let carouselIndex = 0;
+
+            // 1. Populate track with all images + a clone of the first one for seamless loop
+            const allImages = [...images, images[0]];
+            carouselTrack.innerHTML = allImages.map(src => `<img src="${src}" class="h-[90%] w-auto object-contain flex-shrink-0 bg-zinc-700 min-w-full">`).join('');
+            
+            // 2. Set interval for sliding
+            carouselIntervals[carouselId] = setInterval(() => {
+                carouselIndex++;
+                
+                // Apply transition for the slide
+                carouselTrack.style.transition = 'transform 0.5s ease-in-out';
+                carouselTrack.style.transform = `translateX(-${carouselIndex * 100}%)`;
+
+                // 3. Handle the loop back to the start
+                if (carouselIndex === numImages) {
+                    // We've just slid to the cloned first image
+                    setTimeout(() => {
+                        // After the slide animation finishes, jump back to the real first image
+                        carouselTrack.style.transition = 'none';
+                        carouselIndex = 0;
+                        carouselTrack.style.transform = `translateX(0%)`;
+                    }, 500); // This timeout MUST match the transition duration
+                }
+            }, 4000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderProjectCards();
+
+            // Modal controls
+            const projectModal = document.getElementById('project-modal');
+            const closeModalBtns = document.querySelectorAll('.close-project-modal-btn');
+            const mainScrollContainer = document.querySelector('main');
+
+            if (closeModalBtns.length > 0 && projectModal && mainScrollContainer) {
+                const closeModal = () => {
+                    projectModal.classList.remove('is-open');
+                    projectModal.querySelector('.glass-panel').classList.remove('is-open');
+                    mainScrollContainer.style.overflowY = 'scroll';
+
+                    // Clear all carousel intervals
+                    Object.values(carouselIntervals).forEach(interval => clearInterval(interval));
+                    carouselIntervals = {};
+                };
+                closeModalBtns.forEach(btn => btn.addEventListener('click', closeModal));
+
+                // Close if backdrop is clicked
+                projectModal.addEventListener('click', (event) => {
+                    if (event.target === projectModal) {
+                        closeModal();
+                    }
+                });
+
+                // Close on Escape key
+                document.addEventListener('keydown', (event) => {
+                    if (event.key === 'Escape' && projectModal.classList.contains('is-open')) {
+                        closeModal();
+                    }
+                });
+            }
+        });
+
+           // Preloader Logic
+        window.addEventListener('load', () => {
+            const preloader = document.getElementById('preloader');
+            const loadingBar = document.getElementById('loading-bar');
+            const loadingPercentage = document.getElementById('loading-percentage');
+            const mainContent = document.querySelector('main');
+            const statusText = document.getElementById('loading-status');
+            const statuses = ["Calibrating...", "Syncing Modules...", "Authenticating...", "Loading Assets...", "Finalizing...", "Booting Core..."];
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 3) + 1;
+                if (progress > 100) progress = 100;
+
+                loadingBar.style.width = progress + '%';
+                loadingPercentage.textContent = progress + '%';
+                
+                if (progress > 20 && progress < 40) statusText.textContent = statuses[0];
+                if (progress > 40 && progress < 60) statusText.textContent = statuses[1];
+                if (progress > 60 && progress < 80) statusText.textContent = statuses[2];
+                if (progress > 80 && progress < 90) statusText.textContent = statuses[3];
+                if (progress > 90 && progress < 99) statusText.textContent = statuses[4];
+
+                if (progress === 100) {
+                    clearInterval(interval);
+                    statusText.textContent = statuses[5];
+                    
+                    setTimeout(() => {
+                        preloader.style.transform = 'translateY(-100%)';
+                        mainContent.style.opacity = '1';
+                    }, 400); // Short pause at 100%
+
+                    setTimeout(() => {
+                        preloader.style.display = 'none';
+                    }, 1200); // Wait for slide-up animation to finish (0.8s) + pause
+                }
+            }, 80); // Update interval
+        });
+
+        // EmailJS Contact Form Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const contactForm = document.getElementById('contact-form');
+            const submitButton = contactForm ? contactForm.querySelector('button[type="submit"]') : null;
+
+            if (contactForm && submitButton) {
+                // IMPORTANT: Go to EmailJS.com, create an account, and get your keys.
+                // Replace with your actual Public Key, Service ID, and Template ID.
+                const PUBLIC_KEY = "3jb-_HFXGtOYKL2Ea";
+                const SERVICE_ID = 'service_2nemlyk';
+                const TEMPLATE_ID = 'template_85r2tzc';
+
+                emailjs.init(PUBLIC_KEY);
+
+                // Copy to clipboard for email links
+                document.querySelectorAll('.copy-email-link').forEach(link => {
+                    link.addEventListener('click', (event) => {
+                        // The default mailto action will still proceed.
+                        const email = event.currentTarget.href.replace('mailto:', '');
+                        
+                        navigator.clipboard.writeText(email).then(() => {
+                            const originalText = link.textContent;
+                            link.textContent = '[COPIED!]';
+                            link.style.pointerEvents = 'none'; // Prevent multiple rapid clicks
+                            setTimeout(() => {
+                                link.textContent = originalText;
+                                link.style.pointerEvents = 'auto';
+                            }, 2000);
+                        }).catch(err => {
+                            console.error('Failed to copy email:', err);
+                        });
+                    });
+                });
+
+                contactForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+
+                    const originalButtonText = submitButton.innerHTML;
+                    submitButton.innerHTML = '[SENDING...]';
+                    submitButton.disabled = true;
+
+                    emailjs.sendForm(SERVICE_ID, TEMPLATE_ID, this)
+                        .then(() => {
+                            submitButton.innerHTML = '[TRANSMISSION SENT!]';
+                            setTimeout(() => {
+                                submitButton.innerHTML = originalButtonText;
+                                submitButton.disabled = false;
+                                contactForm.reset();
+                            }, 4000);
+                        }, (err) => {
+                            submitButton.innerHTML = '[ERROR - TRY AGAIN]';
+                            submitButton.disabled = false;
+                            console.error('EmailJS failed to send:', JSON.stringify(err));
+                            alert('Sorry, there was an error sending your message. Please try again later.');
+                        });
+                });
+            }
+        });
+
+           // Resume Modal Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const viewResumeBtn = document.getElementById('view-resume-btn');
+            const resumeModal = document.getElementById('resume-modal');
+            const closeResumeModalBtn = document.getElementById('close-resume-modal');
+            const mainScrollContainer = document.querySelector('main');
+
+            if (viewResumeBtn && resumeModal && closeResumeModalBtn && mainScrollContainer) {
+                const openModal = () => {
+                    resumeModal.classList.add('is-open');
+                    mainScrollContainer.style.overflowY = 'hidden'; // Prevent background scroll
+                };
+
+                const closeModal = () => {
+                    resumeModal.classList.remove('is-open');
+                    mainScrollContainer.style.overflowY = 'scroll'; // Restore background scroll
+                };
+
+                viewResumeBtn.addEventListener('click', openModal);
+                closeResumeModalBtn.addEventListener('click', closeModal);
+
+                // Close if the backdrop is clicked
+                resumeModal.addEventListener('click', (event) => {
+                    if (event.target === resumeModal) {
+                        closeModal();
+                    }
+                });
+            }
+
+            // Footer Logic
+            const backToTopButton = document.getElementById('back-to-top');
+            const mainContainer = document.querySelector('main');
+            if (backToTopButton && mainContainer) {
+                backToTopButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+
+            const lastSyncElement = document.getElementById('footer-last-sync');
+            if(lastSyncElement){
+                const now = new Date();
+                const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                lastSyncElement.textContent = timeString;
+            }
+
+            // 3D Card Effect for About Me photo
+            const card = document.getElementById('os-window');
+            if (card) {
+                const maxRotate = 15; // Max rotation in degrees
+
+                card.addEventListener('mousemove', (e) => {
+                    const { left, top, width, height } = card.getBoundingClientRect();
+                    const x = e.clientX - left;
+                    const y = e.clientY - top;
+
+                    const centerX = width / 2;
+                    const centerY = height / 2;
+
+                    const deltaX = x - centerX;
+                    const deltaY = y - centerY;
+
+                    const rotateY = (deltaX / centerX) * maxRotate;
+                    const rotateX = -(deltaY / centerY) * maxRotate;
+
+                    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.05, 1.05, 1.05)`;
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+                });
+            }
+
+            function createParticles(container, count) {
+                if (!container) return;
+                for (let i = 0; i < count; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    const size = Math.random() * 3 + 1; // size between 1px and 4px
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    particle.style.left = `${Math.random() * 100}%`;
+                    const duration = Math.random() * 15 + 10; // duration between 10s and 25s
+                    particle.style.animationDuration = `${duration}s`;
+                    const delay = Math.random() * 15; // delay up to 15s
+                    particle.style.animationDelay = `${delay}s`;
+                    // Add a custom property for horizontal drift
+                    particle.style.setProperty('--x-end', `${(Math.random() - 0.5) * 200}px`);
+                    container.appendChild(particle);
+                }
+            }
+
+            const timelineParticles = document.querySelector('#timeline-banner .particles-container');
+            const contactParticles = document.querySelector('#contact-section .particles-container');
+            createParticles(timelineParticles, 30);
+            createParticles(contactParticles, 30);
+
+            function typeWriter(element, htmlString, onComplete) {
+                element.innerHTML = ''; // Clear previous content
+                let i = 0;
+                const speed = 20; // Typing speed in milliseconds
+                const scrollContainer = document.getElementById('chat-messages');
+
+                function type() {
+                    if (i < htmlString.length) {
+                        if (htmlString.charAt(i) === '<') {
+                            const tagEnd = htmlString.indexOf('>', i);
+                            if (tagEnd !== -1) {
+                                element.innerHTML += htmlString.substring(i, tagEnd + 1);
+                                i = tagEnd;
+                            } else {
+                                element.innerHTML += htmlString.charAt(i);
+                            }
+                        } else {
+                            element.innerHTML += htmlString.charAt(i);
+                        }
+                        i++;
+                        if (scrollContainer) {
+                            scrollContainer.scrollTop = scrollContainer.scrollHeight;
+                        }
+                        setTimeout(type, speed);
+                    } else {
+                        if (onComplete) onComplete();
+                    }
+                }
+                type();
+            }
+
+            // Chat Modal Logic
+            const chatHead = document.getElementById('chat-head');
+            const chatWindow = document.getElementById('chat-window');
+            const closeChatBtn = document.getElementById('close-chat');
+            const chatForm = document.getElementById('chat-form');
+            const chatInput = document.getElementById('chat-input');
+            const chatMessages = document.getElementById('chat-messages');
+            const suggestionContainer = document.getElementById('chat-suggestions');
+
+            const toggleChat = () => {
+                if (chatWindow.classList.contains('hidden')) {
+                    chatWindow.classList.remove('hidden');
+                    setTimeout(() => chatWindow.classList.add('is-open'), 10);
+                    // Reset suggestions visibility when opening chat
+                    if (suggestionContainer) {
+                        suggestionContainer.style.display = 'flex';
+                    }
+                } else {
+                    chatWindow.classList.remove('is-open');
+                    setTimeout(() => chatWindow.classList.add('hidden'), 300);
+                }
+            };
+
+            if (chatHead) {
+                chatHead.addEventListener('click', toggleChat);
+            }
+            if (closeChatBtn) {
+                closeChatBtn.addEventListener('click', toggleChat);
+            }
+
+            // Handle suggestion chip clicks
+            if (suggestionContainer) {
+                suggestionContainer.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('suggestion-chip')) {
+                        const query = e.target.textContent;
+                        chatInput.value = query;
+                        // Directly trigger the form's submit event
+                        chatForm.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                    }
+                });
+            }
+
+            if (chatForm) {
+                chatForm.addEventListener('submit', async(e) => {
+                    e.preventDefault();
+                    const userMessage = chatInput.value.trim();
+                    if (!userMessage) return;
+
+                    if (suggestionContainer) suggestionContainer.style.display = 'none';
+
+                    // Display user message
+                    const userMessageDiv = document.createElement('div');
+                    userMessageDiv.className = 'flex justify-end';
+                    userMessageDiv.innerHTML = `<div class="chat-bubble-user">${userMessage}</div>`;
+                    chatMessages.appendChild(userMessageDiv);
+                    chatInput.value = '';
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                    // Show typing indicator
+                    const botMessageDiv = document.createElement('div');
+                    botMessageDiv.className = 'flex justify-start';
+                    botMessageDiv.innerHTML = `
+                        <div class="chat-bubble-bot">
+                            <span class="inline-block animate-pulse">●</span>
+                            <span class="inline-block animate-pulse" style="animation-delay: 0.2s;">●</span>
+                            <span class="inline-block animate-pulse" style="animation-delay: 0.4s;">●</span>
+                        </div>
+                    `;
+                    chatMessages.appendChild(botMessageDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    // API Call
+                    try {
+                        const response = await fetch('chat_api.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ message: userMessage }),
+                        });
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        const data = await response.json();
+                        let botReply = data.reply || data.error || 'Sorry, something went wrong.';
+                        // Convert Markdown bold to HTML strong tags
+                        botReply = botReply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                        // Convert newlines to <br> tags
+                        botReply = botReply.replace(/\n/g, '<br>');
+                        const botReplyElement = botMessageDiv.querySelector('.chat-bubble-bot');
+                        if (data.error) {
+                            botReplyElement.classList.add('text-red-400');
+                        }
+                        // Use the typewriter effect to display the response
+                        typeWriter(botReplyElement, botReply, () => {
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        });
+                    } catch (error) {
+                        console.error('Chat API Fetch Error:', error);
+                        const botReplyElement = botMessageDiv.querySelector('.chat-bubble-bot');
+                        let errorText = 'Error connecting to the assistant. ';
+                        if (window.location.protocol === 'file:') {
+                            errorText += '<br><br><strong>Diagnosis:</strong> It looks like you are opening this HTML file directly. This chat feature needs a web server to work.<br><br><strong>Solution:</strong> Please access this page through your local server (e.g., http://localhost/newPort/try.html).';
+                        } else {
+                            errorText += 'Please check the web server logs (like Apache/XAMPP logs) and the browser\'s developer console (network tab) for more details.';
+                        }
+                        botReplyElement.innerHTML = errorText;
+                        botReplyElement.classList.add('text-red-400');
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
