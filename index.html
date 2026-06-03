@@ -2196,40 +2196,29 @@
                     chatMessages.scrollTop = chatMessages.scrollHeight;
                     // API Call
                     try {
-                        const response = await fetch('/api/chat', {
+                        const response = await fetch('chat_api.php', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                             },
                             body: JSON.stringify({ message: userMessage }),
                         });
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
+
                         const data = await response.json();
-                        let botReply = data.reply || data.error || 'Sorry, something went wrong.';
-                        // Convert Markdown bold to HTML strong tags
-                        botReply = botReply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                        // Convert newlines to <br> tags
-                        botReply = botReply.replace(/\n/g, '<br>');
-                        const botReplyElement = botMessageDiv.querySelector('.chat-bubble-bot');
-                        if (data.error) {
-                            botReplyElement.classList.add('text-red-400');
+
+                        if (!response.ok) {
+                            throw new Error(data.error || `HTTP error! status: ${response.status}`);
                         }
-                        // Use the typewriter effect to display the response
+
+                        let botReply = data.reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+                        const botReplyElement = botMessageDiv.querySelector('.chat-bubble-bot');
                         typeWriter(botReplyElement, botReply, () => {
                             chatMessages.scrollTop = chatMessages.scrollHeight;
                         });
                     } catch (error) {
                         console.error('Chat API Fetch Error:', error);
                         const botReplyElement = botMessageDiv.querySelector('.chat-bubble-bot');
-                        let errorText = 'Error connecting to the assistant. ';
-                        if (window.location.protocol === 'file:') {
-                            errorText += '<br><br><strong>Diagnosis:</strong> It looks like you are opening this HTML file directly. This chat feature needs a web server to work.<br><br><strong>Solution:</strong> Please access this page through your local server (e.g., http://localhost/newPort/try.html).';
-                        } else {
-                            errorText += 'Please check the web server logs (like Apache/XAMPP logs) and the browser\'s developer console (network tab) for more details.';
-                        }
-                        botReplyElement.innerHTML = errorText;
+                        botReplyElement.innerHTML = `<strong>Error:</strong> ${error.message}`;
                         botReplyElement.classList.add('text-red-400');
                         chatMessages.scrollTop = chatMessages.scrollHeight;
                     }
