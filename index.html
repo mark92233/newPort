@@ -2196,7 +2196,7 @@
                     chatMessages.scrollTop = chatMessages.scrollHeight;
                     // API Call
                     try {
-                        const response = await fetch('chat_api.php', {
+                        const response = await fetch('/api/chat', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
